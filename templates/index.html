@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OPFOR BOOK IN</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1 style="text-align:center">OPFOR BOOK IN</h1><br>
+    <div class="row" style="text-align: center;">
+        <div class="col-md-2">
+            <label for="name">Select Name:</label>
+            <input type="text" placeholder="Trooper Name" id="name" name="name" style="height:20px; width:170px; margin-right:20px"><br><br><br><br>
+            <button onclick="sendData()" style="height:40px; width:90px">Book In</button>
+        </div>
+    </div>
+    <div id="output"></div>
+    <div id="ip"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script>
+
+        function sendData() {
+            navigator.geolocation.getCurrentPosition(showPosition);
+            function showPosition(position) {
+            var key ='AAAAAAAAAAAAAAAA'//key used in Python
+            key = CryptoJS.enc.Utf8.parse(key);
+            var iv = CryptoJS.enc.Utf8.parse('BBBBBBBBBBBBBBBB')
+
+
+            var charset_1= CryptoJS.AES.encrypt(String(position.coords.latitude), key, { iv: iv, mode: CryptoJS.mode.CBC}).toString();
+            var charset_22 = CryptoJS.AES.encrypt(String(position.coords.longitude), key, { iv: iv, mode: CryptoJS.mode.CBC}).toString();
+            var trp = document.getElementById("name").value;
+
+            $.getJSON("https://api.ipify.org?format=json", function(data) {
+                var ip = data.ip;
+
+
+            $.ajax({
+                url: '/process',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 'lat1': charset_1, 'long1': charset_22, 'trp': trp, 'ip': ip }),
+                success: function(response) {
+                    document.getElementById('output').innerHTML = response.result;
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+            })
+        }
+        }
+    </script>
+<br><br><br><br><br>
+<h3 style="text-align:center">Book in History for {{ today }}</h3><br>
+<table class="table" style="width:40%; margin-left: 30%; text-align:center">
+    <thead style="padding-right:10px;">
+      <tr>
+        <th scope="col">Trooper Name</th>
+        <th scope="col">Book in Time</th>
+      </tr>
+    </thead>
+    <tbody>
+        {% for x in table_data %}
+        <tr>
+            <td scope="row">{{ x['user'] }}</td>
+            <td>{{ x['book_time'] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+  </table>
+
+
+
+</body>
+</html>
+
